@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: statping
+  labels:
+    run: statping
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    run: statping
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statping
+spec:
+  selector:
+    matchLabels:
+      run: statping
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: statping
+    spec:
+      containers:
+      - name: statping
+        image: statping/statping:v0.90.74
+        env:
+          - name: DB_CONN
+            value: postgres
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: hostname
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: port
+          - name: DB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: database
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: username
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: password
+        ports:
+          - containerPort: 8080
+      restartPolicy: Always
